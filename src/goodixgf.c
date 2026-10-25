@@ -60,6 +60,11 @@
 /* enroll 多样性阈值：两帧 8bit 图像的平均绝对差低于该值即判为"同一位置
  * 重复按压"（SIFT 关键点几乎一致）。可经 GOODIX_ENROLL_MIN_DIFF 覆盖。 */
 #define GF_ENROLL_MIN_DIFF  8.0
+/* 帧质量门限：DoG 带通后 (raw - base) 的标准差（12bit 计数，见
+ * gx_imgproc_signal）。实测满按 ~110-175、空帧/悬空 ~2-5；低于门限的
+ * 帧几乎没有脊谷对比度，交给 SIGFM 只会匹配到传感器残影，按"重试"处理
+ * 而不注册/比对。可经 GOODIX_MIN_RIDGE 覆盖（0 关闭）。 */
+#define GF_MIN_RIDGE  10.0
 
 struct _FpiDeviceGoodixGF
 {
@@ -271,6 +276,28 @@ gf_capture_worker (gpointer user_data)
            * 修改任何图像参数后必须 fprintd-delete 重新 enroll。 */
           gx_imgproc_apply_env (&p);
           gx_imgproc_to8bit (gx, &p, img, fimg->data);
+
+          /* 质量门限：脊谷对比度过低（空触发/轻触/悬空）按重试处理 */
+          {
+            struct gx_imgproc_signal sig;
+            const gchar *e = g_getenv ("GOODIX_MIN_RIDGE");
+            gdouble min_ridge = e && *e ? g_ascii_strtod (e, NULL) : GF_MIN_RIDGE;
+
+            if (gx_imgproc_signal (gx, &p, img, &sig) == 0)
+              {
+                fp_info ("frame signal dc=%.0f ridge=%.1f", sig.dc, sig.ridge);
+                if (sig.ridge < min_ridge)
+                  {
+                    fp_warn ("frame too weak (ridge %.1f < %.1f) - "
+                             "place the finger flat and try again",
+                             sig.ridge, min_ridge);
+                    gf_post (self, gf_on_retry_scan, NULL, NULL, FALSE);
+                    g_object_unref (fimg);
+                    gx_wait_finger_up (gx, 15000);
+                    continue;
+                  }
+              }
+          }
           /* 这是一个完整的按压帧。SIGFM 使用对尺度/旋转不敏感的 SIFT
            * 关键点；保持 FPI_IMAGE_PARTIAL 不设置，因为设置后会被裁剪
            * 边缘特征。 */
