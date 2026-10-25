@@ -73,6 +73,8 @@
 
    - **`libfprint/meson.build`**：`driver_sources` 用数组格式，追加 `'goodixgf'` 条目（`goodixgf.c` + `core/*.c`）。驱动类型函数 `fpi_device_goodixgf_get_type` 由构建系统按 `-Ddrivers=goodixgf` 自动收集（`drivers_type_func`），与 `goodixgf.c` 的 `G_DEFINE_TYPE` 对应。
 
+   - **`libfprint/sigfm/sigfm.cpp`**：两处匹配修复（已向上游 libfprint !530 提交，fork 合入前由脚本应用）：`match::operator<` 改为完整的字典序（原来只比较 `p1.y`，`std::set` 每行只留一个对应）；丢弃位移 ≤ 2 像素的对应（传感器固定图案在每帧同一像素，会让不同手指高分互配）。
+
 4. 编译安装：
 
    ```sh
