@@ -230,8 +230,15 @@ cp "$GOODIX_LINUX/src/transport.c" \
    "$GOODIX_LINUX/src/goodix_crc.c" \
    "$D/core/"
 cp "$GOODIX_LINUX/include/goodix.h" \
-   "$GOODIX_LINUX/include/goodix_imgproc.h" \
-   "$GOODIX_LINUX/include/goodix_fw.h" "$D/core/"
+   "$GOODIX_LINUX/include/goodix_imgproc.h" "$D/core/"
+# goodix_fw.h (vendor firmware image) is optional: without it the driver only
+# compares the version and never erases or flashes. A copy left in the source
+# tree by an earlier run is removed so it is not picked up.
+if [ -f "$GOODIX_LINUX/include/goodix_fw.h" ]; then
+  cp "$GOODIX_LINUX/include/goodix_fw.h" "$D/core/"
+else
+  rm -f "$D/core/goodix_fw.h"
+fi
 
 # Copied driver files from a Windows checkout may carry CRLF (g-ir-scanner's gtk-doc
 # parser doesn't recognize \r), normalize line endings like the source tree.

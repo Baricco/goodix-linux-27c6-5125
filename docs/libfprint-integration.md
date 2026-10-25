@@ -54,7 +54,7 @@
      opencv-devel doctest-devel mbedtls-devel fprintd fprintd-pam
    ```
 
-2. 复制驱动到 fork 源码树 `libfprint/drivers/goodixgf/`：`goodixgf.c` + `core/`（goodix-linux 的 `src/*.c` 去掉 `main.c`，以及 `include/goodix.h`、`include/goodix_imgproc.h`、`include/goodix_fw.h`）。
+2. 复制驱动到 fork 源码树 `libfprint/drivers/goodixgf/`：`goodixgf.c` + `core/`（goodix-linux 的 `src/*.c` 去掉 `main.c`，以及 `include/goodix.h`、`include/goodix_imgproc.h`；`include/goodix_fw.h` 存在时一并复制）。固件镜像可选：没有它时驱动只比较版本，不擦除也不烧写。
 
 3. patch meson（该 fork 构建系统结构，锚点已对齐）：
 

@@ -225,8 +225,14 @@ cp "$GOODIX_LINUX/src/transport.c" \
    "$GOODIX_LINUX/src/goodix_crc.c" \
    "$D/core/"
 cp "$GOODIX_LINUX/include/goodix.h" \
-   "$GOODIX_LINUX/include/goodix_imgproc.h" \
-   "$GOODIX_LINUX/include/goodix_fw.h" "$D/core/"
+   "$GOODIX_LINUX/include/goodix_imgproc.h" "$D/core/"
+# goodix_fw.h（厂商固件镜像）可选：没有时驱动只比较版本，绝不擦除或烧写。
+# 同时删除上次运行留在源码树里的旧副本，避免被沿用。
+if [ -f "$GOODIX_LINUX/include/goodix_fw.h" ]; then
+  cp "$GOODIX_LINUX/include/goodix_fw.h" "$D/core/"
+else
+  rm -f "$D/core/goodix_fw.h"
+fi
 
 # 复制的驱动文件若来自 Windows checkout 可能带 CRLF（g-ir-scanner 的 gtk-doc
 # 解析器不认 \r），与源码树同样做行尾规范化。
